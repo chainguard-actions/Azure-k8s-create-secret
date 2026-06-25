@@ -11,6 +11,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v5.0.0) | [`e71ab31`](https://github.com/Azure/k8s-create-secret/commit/e71ab313fe46c3c1d9cee256178524ddb8c79ca0) |
 | v5.0.1 | [`v5.0.1`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v5.0.1) | [`6e0ba80`](https://github.com/Azure/k8s-create-secret/commit/6e0ba8047235646753f2a3a3b359b4d0006ff218) |
 | v6.0.0 | [`v6.0.0`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v6.0.0) | [`5e49ad9`](https://github.com/Azure/k8s-create-secret/commit/5e49ad902ac755e0815974a44904c728da961747) |
+| v6.0.1 | [`v6.0.1`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v6.0.1) | [`ba774cd`](https://github.com/Azure/k8s-create-secret/commit/ba774cded95cc0d795806a986fecd1205a6c2320) |
 
 ## Privacy
 
