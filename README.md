@@ -1,16 +1,111 @@
-# Azure/k8s-create-secret
+# Kubernetes create secret
 
-Create a generic secret, docker-registry secret, or TLS secret in a Kubernetes such as Azure Kubernetes Service (AKS) clusters
+Create a [generic secret or docker-registry secret](https://kubernetes.io/docs/concepts/configuration/secret/) in Kubernetes cluster, replacing the secret if it already exists.
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/Azure/k8s-create-secret](https://github.com/Azure/k8s-create-secret).
+The secret will be created in the cluster context which was set earlier in the workflow by using either [`azure/aks-set-context`](https://github.com/Azure/aks-set-context/tree/master) or [`azure/k8s-set-context`](https://github.com/Azure/k8s-set-context/tree/master)
 
-## Versions
+Refer to the action metadata file for details about all the inputs https://github.com/Azure/k8s-create-secret/blob/master/action.yml
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v5.0.0 | [`v5.0.0`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v5.0.0) | [`e71ab31`](https://github.com/Azure/k8s-create-secret/commit/e71ab313fe46c3c1d9cee256178524ddb8c79ca0) |
-| v5.0.1 | [`v5.0.1`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v5.0.1) | [`6e0ba80`](https://github.com/Azure/k8s-create-secret/commit/6e0ba8047235646753f2a3a3b359b4d0006ff218) |
-| v6.0.0 | [`v6.0.0`](https://github.com/chainguard-actions/Azure-k8s-create-secret/tree/v6.0.0) | [`5e49ad9`](https://github.com/Azure/k8s-create-secret/commit/5e49ad902ac755e0815974a44904c728da961747) |
+For `docker-registry` type secrets, the fields `.dockercfg` or `.dockerconfigjson` can be supplied in plaintext on the `string-data` JSON object, or base64 encoded on the `data` JSON object as included in the [docker-config-secrets](https://kubernetes.io/docs/concepts/configuration/secret/#docker-config-secrets) section.
+
+## Sample workflow for docker-registry secret (imagepullsecret, stringData)
+
+```yaml
+# File: .github/workflows/workflow.yml
+
+on: push
+
+jobs:
+   example-job:
+      runs-on: ubuntu-latest
+      steps:
+         - name: Set imagePullSecret
+           uses: azure/k8s-create-secret@v6
+           with:
+              namespace: 'myapp'
+              secret-name: 'contoso-cr'
+              container-registry-url: 'containerregistry.contoso.com'
+              container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+              container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+           id: create-secret
+```
+
+## Sample workflow for generic secret (base64 data)
+
+```yaml
+# File: .github/workflows/workflow.yml
+
+on: push
+
+jobs:
+   example-job:
+      runs-on: ubuntu-latest
+      steps:
+         - uses: azure/k8s-create-secret@v6
+           with:
+              namespace: 'default'
+              secret-type: 'generic'
+              secret-name: azure-storage
+              data: ${{ secrets.AZURE_STORAGE_ACCOUNT_DATA }}
+```
+
+### Alternative for Container Registry Secrets
+
+Get the username and password of your container registry and create secrets for them. For Azure Container registry refer to **admin [account document](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-authentication#admin-account)** for username and password.
+
+For creating docker-registery secrets, [kubectl can generate the JSON](https://kubernetes.io/docs/concepts/configuration/secret/#docker-config-secrets)
+
+```
+kubectl create secret docker-registry secret-tiger-docker \
+  --docker-username=tiger \
+  --docker-password=pass113 \
+  --docker-email=tiger@acme.com \
+  --docker-server=my-registry.example:5000
+```
+
+Example output:
+
+```
+{
+    "apiVersion": "v1",
+    "data": {
+        ".dockerconfigjson": "eyJhdXRocyI6eyJteS1yZWdpc3RyeTo1MDAwIjp7InVzZXJuYW1lIjoidGlnZXIiLCJwYXNzd29yZCI6InBhc3MxMTMiLCJlbWFpbCI6InRpZ2VyQGFjbWUuY29tIiwiYXV0aCI6ImRHbG5aWEk2Y0dGemN6RXhNdz09In19fQ=="
+    },
+    "kind": "Secret",
+    "metadata": {
+        "creationTimestamp": "2021-07-01T07:30:59Z",
+        "name": "secret-tiger-docker",
+        "namespace": "default",
+        "resourceVersion": "566718",
+        "uid": "e15c1d7b-9071-4100-8681-f3a7a2ce89ca"
+    },
+    "type": "kubernetes.io/dockerconfigjson"
+}
+```
+
+# Testing
+
+Unit tests are run with [Vitest](https://vitest.dev/) and can be found in the `./test` directory
+
+Integration tests use [Minikube](https://minikube.sigs.k8s.io/docs/) and are executed within workflows in `./github/workflows`
+
+# Contributing
+
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## Support
+
+k8s-create-secret is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/k8s-create-secret/issues), and if your issue isn't already represented please [open a new one](https://github.com/Azure/k8s-create-secret/issues/new/choose). The project maintainers will respond to the best of their abilities.
 
 ## Privacy
 

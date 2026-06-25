@@ -1,0 +1,30 @@
+name: Test no cluster context error
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Ensure KUBECONFIG is unset
+        run: unset KUBECONFIG || true
+
+      - id: action
+        uses: .
+        with:
+          secret-name: my-test-secret
+          secret-type: generic
+          string-data: '{"key1":"value1"}'
+        continue-on-error: true
+
+      - name: Assert action failed due to missing cluster context
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when no cluster context is set, but outcome was '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when no cluster context was set"
