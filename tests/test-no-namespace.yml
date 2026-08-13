@@ -1,4 +1,4 @@
-name: Test docker-registry secret creation
+name: Test secret creation without explicit namespace
 on:
   workflow_dispatch:
 jobs:
@@ -38,27 +38,25 @@ jobs:
         uses: .
         with:
           secret-type: 'kubernetes.io/dockerconfigjson'
-          secret-name: 'my-registry-secret'
-          container-registry-url: 'myregistry.azurecr.io'
-          container-registry-username: 'myuser'
-          container-registry-password: 'mypassword'
-          container-registry-email: 'user@example.com'
-          namespace: 'default'
+          secret-name: 'no-namespace-secret'
+          container-registry-url: 'docker.io'
+          container-registry-username: 'dockeruser'
+          container-registry-password: 'dockerpass'
 
-      - name: Assert secret was created in cluster
+      - name: Assert secret was created in default namespace
         run: |
-          echo "Checking if secret 'my-registry-secret' exists in namespace 'default'..."
-          if ! kubectl get secret my-registry-secret -n default; then
-            echo "FAIL: secret 'my-registry-secret' was not found in namespace 'default'"
+          echo "Checking if secret 'no-namespace-secret' exists in default namespace..."
+          if ! kubectl get secret no-namespace-secret -n default; then
+            echo "FAIL: secret 'no-namespace-secret' was not found in default namespace"
             exit 1
           fi
-          SECRET_TYPE=$(kubectl get secret my-registry-secret -n default -o jsonpath='{.type}')
+          SECRET_TYPE=$(kubectl get secret no-namespace-secret -n default -o jsonpath='{.type}')
           echo "Secret type: $SECRET_TYPE"
           if [ "$SECRET_TYPE" != "kubernetes.io/dockerconfigjson" ]; then
             echo "FAIL: expected secret type 'kubernetes.io/dockerconfigjson', got '$SECRET_TYPE'"
             exit 1
           fi
-          echo "PASS: secret created with correct type"
+          echo "PASS: secret created in default namespace with correct type"
 
       - name: Cleanup kwok cluster
         if: always()
