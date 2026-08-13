@@ -1,0 +1,56 @@
+name: Test missing container-registry-url validation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up mock kubeconfig
+        run: |
+          mkdir -p /tmp/kube
+          cat > /tmp/kube/config <<'EOF'
+          apiVersion: v1
+          kind: Config
+          clusters:
+          - cluster:
+              server: https://127.0.0.1:6443
+              insecure-skip-tls-verify: true
+            name: test-cluster
+          contexts:
+          - context:
+              cluster: test-cluster
+              user: test-user
+              namespace: default
+            name: test-context
+          current-context: test-context
+          users:
+          - name: test-user
+            user:
+              token: fake-token
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          secret-name: my-registry-secret
+          secret-type: kubernetes.io/dockerconfigjson
+          # Intentionally omit container-registry-url to trigger validation error
+          container-registry-username: myuser
+          container-registry-password: mypassword
+          namespace: default
+        continue-on-error: true
+        env:
+          KUBECONFIG: /tmp/kube/config
+
+      - name: Assert action failed due to missing registry URL
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when container-registry-url is missing, got: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly failed when container-registry-url is missing"

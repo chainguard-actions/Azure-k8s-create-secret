@@ -1,4 +1,4 @@
-name: Test docker-registry secret creation
+name: Test secret creation with default namespace
 on:
   workflow_dispatch:
 jobs:
@@ -26,21 +26,21 @@ jobs:
                   self.send_response(201)
                   self.send_header('Content-Type', 'application/json')
                   self.end_headers()
-                  self.wfile.write(json.dumps({'kind':'Secret','apiVersion':'v1','metadata':{'name':'my-registry-secret','namespace':'default'},'type':'kubernetes.io/dockerconfigjson'}).encode())
+                  self.wfile.write(json.dumps({'kind':'Secret','apiVersion':'v1','metadata':{'name':'default-ns-secret','namespace':'default'}}).encode())
               def do_GET(self):
                   self.send_response(200)
                   self.send_header('Content-Type', 'application/json')
                   self.end_headers()
                   self.wfile.write(json.dumps({'kind':'APIVersions','versions':['v1']}).encode())
 
-          server = http.server.HTTPServer(('127.0.0.1', 18444), K8sHandler)
+          server = http.server.HTTPServer(('127.0.0.1', 18443), K8sHandler)
           t = threading.Thread(target=server.serve_forever)
           t.daemon = True
           t.start()
           time.sleep(86400)
           PYEOF
           sleep 1
-          echo "Mock K8s API server started on port 18444"
+          echo "Mock K8s API server started on port 18443"
 
       - name: Set up kubeconfig pointing to mock server
         run: |
@@ -50,13 +50,12 @@ jobs:
           kind: Config
           clusters:
           - cluster:
-              server: http://127.0.0.1:18444
+              server: http://127.0.0.1:18443
             name: test-cluster
           contexts:
           - context:
               cluster: test-cluster
               user: test-user
-              namespace: default
             name: test-context
           current-context: test-context
           users:
@@ -64,6 +63,7 @@ jobs:
             user:
               token: fake-token
           EOF
+          # Remove leading spaces from heredoc indentation
           sed -i 's/^          //' $HOME/.kube/config-test
           echo "KUBECONFIG=$HOME/.kube/config-test" >> $GITHUB_ENV
           cat $HOME/.kube/config-test
@@ -71,13 +71,10 @@ jobs:
       - id: action
         uses: .
         with:
-          secret-name: my-registry-secret
-          secret-type: kubernetes.io/dockerconfigjson
-          container-registry-url: myregistry.azurecr.io
-          container-registry-username: myuser
-          container-registry-password: mypassword
-          container-registry-email: myuser@example.com
-          namespace: default
+          secret-name: default-ns-secret
+          container-registry-url: myregistry.example.com
+          container-registry-username: admin
+          container-registry-password: adminpass
 
       - name: Assert action succeeded
         env:
@@ -88,4 +85,4 @@ jobs:
             echo "FAIL: expected action to succeed but outcome was '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: docker-registry secret creation action completed successfully"
+          echo "PASS: action completed successfully"

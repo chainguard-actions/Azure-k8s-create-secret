@@ -1,0 +1,22 @@
+name: 'Run prettify'
+on:
+   pull_request:
+   push:
+      branches: [main]
+
+permissions: {}
+
+jobs:
+   prettier:
+      name: Prettier Check
+      runs-on: ubuntu-latest
+      permissions:
+         contents: read
+      steps:
+         - name: Checkout Repository
+           uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+
+         - name: Enforce Prettier
+           uses: actionsx/prettier@8b6d14bd1241e743fa9a6112b43d691d1890a8e9 # v2
+           with:
+              args: --check .
