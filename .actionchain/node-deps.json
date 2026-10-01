@@ -1,0 +1,13 @@
+{
+  "status": "unbundlable",
+  "entries": [
+    {
+      "path": "lib/index.js",
+      "status": "unbundlable",
+      "reason": "unsupported-require-call: This call to \"require\" will not be bundled because the argument is not a string literal",
+      "warnings": [
+        "unsupported-require-call: This call to \"require\" will not be bundled because the argument is not a string literal"
+      ]
+    }
+  ]
+}
