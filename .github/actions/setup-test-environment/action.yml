@@ -21,7 +21,7 @@ runs:
    using: 'composite'
    steps:
       - name: Setup Minikube
-        uses: medyagh/setup-minikube@latest
+        uses: medyagh/setup-minikube@e9e035a86bbc3caea26a450bd4dbf9d0c453682e # latest
         with:
            minikube-version: ${{ inputs.minikube-version }}
            kubernetes-version: ${{ inputs.kubernetes-version }}
@@ -29,9 +29,11 @@ runs:
 
       - name: npm install and build
         shell: bash
+        env:
+           PR_BASE_REF: ${{ inputs.pr-base-ref }}
         run: |
-           echo ${{ inputs.pr-base-ref }}
-           if [[ "${{ inputs.pr-base-ref }}" != releases/* ]]; then
+           echo "$PR_BASE_REF"
+           if [[ "$PR_BASE_REF" != releases/* ]]; then
              npm install
              npm run build
            fi
