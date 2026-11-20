@@ -1,6 +1,11 @@
 {
   "owner": "Azure",
   "repo": "k8s-create-secret",
-  "version": "",
-  "url": "https://github.com/Azure/k8s-create-secret"
+  "version": "v6.0.2",
+  "commit_sha": "39b454ea37d7846d278306e9de84e870e88a5aff",
+  "url": "https://github.com/Azure/k8s-create-secret",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
+  "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
+  "test_agent_version": "2",
+  "harden_agent_version": "2"
 }

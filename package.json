@@ -1,0 +1,37 @@
+{
+   "name": "k8s-create-secret-action",
+   "version": "6.0.2",
+   "private": true,
+   "type": "module",
+   "main": "lib/index.js",
+   "scripts": {
+      "build": "tsc --noEmit && node esbuild.config.mjs",
+      "check": "tsc --noEmit",
+      "test": "vitest run",
+      "test:http": "node --test test/http-integration.test.mjs",
+      "format": "prettier --write .",
+      "format-check": "prettier --check .",
+      "prepare": "husky"
+   },
+   "keywords": [
+      "actions",
+      "node",
+      "setup"
+   ],
+   "author": "GitHub",
+   "license": "MIT",
+   "dependencies": {
+      "@actions/core": "^3.0.1",
+      "@actions/exec": "^3.0.0",
+      "@actions/tool-cache": "^4.0.0",
+      "@kubernetes/client-node": "^2.0.2"
+   },
+   "devDependencies": {
+      "@types/node": "^26.6.6",
+      "esbuild": "^0.28.2",
+      "husky": "^9.1.7",
+      "prettier": "^3.9.10",
+      "typescript": "^7.0.2",
+      "vitest": "^5.1.0"
+   }
+}
